@@ -1,0 +1,7 @@
+FROM maven:3.6.0-jdk-11-slim
+COPY src /home/app/src
+COPY pom.xml /home/app
+WORKDIR /home/app
+EXPOSE 8080
+RUN mvn -f pom.xml clean install
+ENTRYPOINT ["java","-jar", "/home/app/target/spring-boot-with-metrics-0.0.1-SNAPSHOT.jar"]

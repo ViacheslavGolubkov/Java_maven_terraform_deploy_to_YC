@@ -1,0 +1,70 @@
+---
+- name: "Install packages"
+  apt:
+    update_cache: yes
+    name: 
+      - git
+      - ca-certificates
+      - curl
+      - gnupg
+      - lsb-release
+    state: present
+
+- name: "Create docker path"
+  file:
+    dest: "/etc/apt/keyrings"
+    owner: root
+    mode: 0755
+    recurse: yes
+    state: directory
+
+- name: "Add Docker GPG"
+  apt_key:
+    url: https://download.docker.com/linux/ubuntu/gpg
+    state: present
+
+- name: "Add Docker repository"
+  apt_repository:
+    repo: deb https://download.docker.com/linux/ubuntu bionic stable
+    state: present
+
+- name: "Update apt cache | Install Docker"
+  apt:
+    update_cache: yes
+    state: present
+    name: docker-ce
+
+- name: "Create app path"
+  file:
+    dest: "/app"
+    owner: root
+    mode: 0755
+    recurse: yes
+    state: directory
+
+- name: "Clone repo"
+  git:
+    repo: "{{ repository }}"
+    dest: "/app"
+  ignore_errors: True 
+
+- name: "Copy dockerfile"
+  copy:
+    src: "./docker/dockerfile"
+    dest: "/app"
+
+- name: "Copy docker-compose.yml"
+  copy:
+    src: "./docker/docker-compose.yml"
+    dest: "/app"
+
+- name: "Install Docker compose plugin"
+  apt:
+    update_cache: yes
+    name: docker-compose
+    state: present
+
+- name: "Docker compose"
+  docker_compose:
+    state: present
+    project_src: "/app"

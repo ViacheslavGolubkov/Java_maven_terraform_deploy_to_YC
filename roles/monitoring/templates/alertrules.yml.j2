@@ -1,0 +1,21 @@
+groups:
+ - name: AllInstances
+   rules:
+
+   - alert: PrometheusTargetMissing
+     expr: up == 0
+     for: 0s
+     labels:
+       severity: critical
+     annotations:
+       summary: One of the instances is down
+       description: "A Prometheus target has disappeared. An exporter might be crashed."
+
+   - alert: PrometheusAllTargetsMissing
+     expr: count by (job) (up) == 0
+     for: 0m
+     labels:
+       severity: critical
+     annotations:
+       summary: Prometheus all targets missing
+       description: "A Prometheus job does not have living target anymore."

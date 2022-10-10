@@ -1,0 +1,14 @@
+---
+- hosts: all
+  gather_facts: True
+
+- hosts: java_app
+  become: yes
+  roles:
+    - java_app
+    - node_exporter
+
+- hosts: 'monitoring'
+  become: yes
+  roles:
+    - monitoring

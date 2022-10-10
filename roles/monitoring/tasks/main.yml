@@ -1,0 +1,118 @@
+---
+
+- name: "Download prometheus"
+  get_url:
+    url: https://github.com/prometheus/prometheus/releases/download/v2.37.1/prometheus-2.37.1.linux-amd64.tar.gz
+    dest: /tmp
+  
+- name: "Unarchive prometheus"
+  unarchive:
+    src: /tmp/prometheus-2.37.1.linux-amd64.tar.gz
+    dest: /tmp
+    remote_src: yes
+
+- name: "Move prometheus to /usr/local/bin"
+  copy:
+    src: "/tmp/prometheus-2.37.1.linux-amd64/prometheus"
+    dest: "/usr/local/bin/prometheus"
+    remote_src: yes
+    owner: root
+    group: root
+    mode: 0755
+
+- name: "Install unit file to systemd"
+  template:
+    src: templates/prometheus.service.j2
+    dest: /etc/systemd/system/prometheus.service
+    owner: root
+    group: root
+    mode: 0600
+
+- name: "Template prometheus config"
+  template:
+    src: templates/prometheus.yml.j2
+    dest: "/prometheus.yml"
+    owner: root
+    group: root
+    mode: 0600
+
+- name: "Template alertmanager config"
+  template:
+    src: templates/alertmanager.yml.j2
+    dest: "/alertmanager.yml"
+    owner: root
+    group: root
+    mode: 0600
+
+
+- name: "Template alertrules"
+  template:
+    src: templates/alertrules.yml.j2
+    dest: "/alertrules.yml"
+    owner: root
+    group: root
+    mode: 0600
+
+- name: "Install packages for Grafana"
+  apt:
+    name: 
+      - curl
+      - gnupg
+      - lsb-release
+    state: present
+
+- name: "Add Grafana GPG"
+  apt_key:
+    url: https://packages.grafana.com/gpg.key
+    state: present
+
+- name: "Add Grafana repository"
+  apt_repository:
+    repo: deb https://packages.grafana.com/enterprise/deb stable main
+    state: present
+
+- name: "Update apt cache | Install Grafana"
+  apt:
+    update_cache: yes
+    state: present
+    name: grafana-enterprise
+
+- name: "Download alertmanager"
+  get_url:
+    url: https://github.com/prometheus/alertmanager/releases/download/v0.24.0/alertmanager-0.24.0.linux-amd64.tar.gz
+    dest: /tmp
+  
+- name: "Unarchive alertmanager"
+  unarchive:
+    src: /tmp/alertmanager-0.24.0.linux-amd64.tar.gz
+    dest: /tmp
+    remote_src: yes
+
+- name: "Move alertmanager to /usr/local/bin"
+  copy:
+    src: "/tmp/alertmanager-0.24.0.linux-amd64/alertmanager"
+    dest: "/usr/local/bin/alertmanager"
+    remote_src: yes
+    owner: root
+    group: root
+    mode: 0755
+
+- name: "Install unit file to systemd"
+  template:
+    src: templates/alertmanager.service.j2
+    dest: /etc/systemd/system/alertmanager.service
+    owner: root
+    group: root
+    mode: 0600
+
+
+- name: "Start alertmanager, prometheus, grafana"
+  systemd:
+    daemon_reload: yes
+    enabled: yes
+    state: started
+    name: "{{ item }}"
+  loop:
+    - alertmanager.service
+    - prometheus.service
+    - grafana-server.service

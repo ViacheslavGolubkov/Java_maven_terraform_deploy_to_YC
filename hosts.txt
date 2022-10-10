@@ -1,0 +1,3 @@
+[all]
+java_app    ansible_host=51.250.9.128 ansible_user=ubuntu
+monitoring    ansible_host=51.250.87.52 ansible_user=ubuntu
